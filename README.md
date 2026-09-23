@@ -149,6 +149,31 @@ x > 10                            # Devuelve TRUE o FALSE.
 
 Una comparación genera datos **lógicos**. 
 
+
+Una comparación de texto debe coincidir con el contenido real del vector. R distingue mayúsculas, minúsculas y cadenas diferentes.
+
+## 4.1 COMPARACIONES CON TEXTO: COINCIDENCIA EXACTA
+
+```
+```
+
+```
+sexo == "F"                       # TRUE donde el valor es exactamente "F".
+sexo == "M"                       # TRUE donde el valor es exactamente "M".
+
+sexo == "fem"                     # Si el vector usa "F" y "M", no encontrará coincidencias.
+
+"F" == "f"                       # FALSE: R distingue mayúsculas y minúsculas.
+"F" == "fem"                     # FALSE: son cadenas distintas.
+```
+
+```text
+Antes de comparar character:
+1. Revisar cómo está codificada la variable.
+2. Escribir exactamente ese valor entre comillas.
+3. Recordar que R distingue mayúsculas y minúsculas.
+```
+
 ---
 
 # 5. OPERADORES LÓGICOS
@@ -198,6 +223,51 @@ A || B                            # O escalar: evalúa un solo valor lógico.
 ```
 
 Para selección de filas, el manual indica utilizar `&` y `|` vectorizados. 
+
+
+## 5.1 CONDICIONES COMPUESTAS E INTERVALOS
+
+```
+```
+
+```
+edad >= 30 & edad <= 60          # Entre 30 y 60, INCLUYENDO 30 y 60.
+edad > 30 & edad < 60            # Entre 30 y 60, EXCLUYENDO 30 y 60.
+
+edad > 50 & hospitalizado         # Deben cumplirse ambas condiciones.
+edad > 50 | hospitalizado         # Basta con que se cumpla una condición.
+!hospitalizado                    # Invierte TRUE/FALSE: pacientes no hospitalizados.
+```
+
+```text
+>=                                # Incluye el límite inferior.
+<=                                # Incluye el límite superior.
+>                                 # Excluye el límite inferior.
+<                                 # Excluye el límite superior.
+&                                 # Une condiciones que deben cumplirse simultáneamente.
+|                                 # Une condiciones donde basta con una.
+!                                 # Niega/invierte una condición lógica.
+```
+
+## 5.2 SI UNA VARIABLE YA ES LÓGICA, NO HAY QUE VOLVER A COMPARARLA
+
+```
+```
+
+```
+hospitalizado                     # Ya es un vector TRUE/FALSE; puede usarse directamente.
+!hospitalizado                    # TRUE para quienes NO están hospitalizados.
+
+hospitalizado == TRUE             # Funciona, pero es redundante.
+hospitalizado == 1                # Puede funcionar por coerción TRUE→1, pero es menos claro y se evita.
+
+edad > 50 & hospitalizado         # Forma directa y legible.
+```
+
+```text
+variable_lógica                   # Usa directamente TRUE/FALSE.
+!variable_lógica                  # Invierte TRUE/FALSE.
+```
 
 ---
 
@@ -287,6 +357,33 @@ which(condicion)                  # Devuelve únicamente posiciones TRUE; elimin
 
 `which()` es especialmente útil cuando una condición de filtrado puede contener `NA`. 
 
+
+## 7.1 DETECTAR Y MANEJAR `NA` EN CONDICIONES
+
+```
+```
+
+```
+is.na(x)                          # TRUE donde x contiene NA.
+!is.na(x)                         # TRUE donde x NO contiene NA.
+
+sum(is.na(x))                     # Cuenta cuántos NA existen.
+
+sum(glucosa > 120, na.rm = TRUE)  # Cuenta cuántos valores >120, ignorando NA de la condición.
+
+which(glucosa > 120)              # Posiciones TRUE; descarta FALSE y NA.
+id[which(glucosa > 120)]          # IDs de quienes tienen glucosa >120 sin arrastrar NA.
+
+id[!is.na(glucosa) & glucosa > 120]
+                                   # Alternativa explícita: primero exige que glucosa no sea NA.
+```
+
+```text
+x > corte                         # Puede producir TRUE / FALSE / NA.
+which(x > corte)                  # Convierte sólo los TRUE en posiciones y descarta NA.
+sum(x > corte, na.rm = TRUE)      # Cuenta TRUE aun si la condición contiene NA.
+```
+
 ---
 
 # 8. VECTORES
@@ -354,12 +451,32 @@ max(x)                            # Valor máximo.
 which.max(x)                      # Posición/nombre del valor máximo.
 which(condicion)                  # Posiciones donde la condición es TRUE.
 
+# Patrón posición → sujeto → valor
+which.max(glucosa)                # Posición del máximo de glucosa.
+id[which.max(glucosa)]            # ID del paciente con el máximo.
+glucosa[which.max(glucosa)]       # Valor máximo observado.
+
 unique(x)                         # Valores únicos/distintos.
 
 sort(x)                           # Ordena valores.
 ```
 
 `names()` añade un atributo al vector; no crea otra columna. 
+
+
+## 9.1 REUTILIZAR UN VECTOR EXISTENTE COMO NOMBRES
+
+```
+```
+
+```
+names(glucosa) <- id              # Usa directamente los IDs existentes como nombres del vector.
+glucosa["P09"]                    # Extrae un valor por nombre y no por posición.
+```
+
+```text
+names(x) <- otro_vector           # No es necesario volver a escribir c(...) si los nombres ya existen.
+```
 
 ---
 
@@ -435,6 +552,57 @@ x[x != 10]                        # Conserva elementos diferentes de 10.
 ```
 
 R comienza a contar desde **1**, y un índice negativo excluye posiciones. 
+
+
+## 10.1 UNA MISMA CONDICIÓN PUEDE RESPONDER PREGUNTAS DIFERENTES
+
+Primero se construye la condición lógica:
+
+```
+```
+
+```
+condicion <- edad > 65            # Vector TRUE/FALSE.
+```
+
+Después decides qué quieres obtener:
+
+```
+```
+
+```
+condicion                          # ¿Qué posiciones cumplen? En forma TRUE/FALSE.
+
+edad[condicion]                    # ¿QUÉ VALORES de edad cumplen?
+
+id[condicion]                      # ¿QUIÉNES cumplen? Devuelve sus identificadores.
+
+sum(condicion)                     # ¿CUÁNTOS cumplen? Suma TRUE = 1 y FALSE = 0.
+
+which(condicion)                   # ¿EN QUÉ POSICIONES cumplen?
+
+length(id[condicion])              # Otra forma de contar cuántos cumplen.
+```
+
+Si la condición puede contener `NA`:
+
+```
+```
+
+```
+sum(condicion, na.rm = TRUE)       # Cuenta ignorando NA.
+which(condicion)                    # Devuelve sólo posiciones TRUE y descarta NA.
+```
+
+Regla mental:
+
+```text
+variable[condición]               # ¿Qué valores?
+id[condición]                     # ¿Quiénes?
+sum(condición)                    # ¿Cuántos? Si no hay NA.
+sum(condición, na.rm = TRUE)      # ¿Cuántos? Si puede haber NA.
+which(condición)                  # ¿En qué posiciones?
+```
 
 ---
 
@@ -1877,5 +2045,55 @@ df[fila, columna]                 # Data frame.
 df$variable                       # Columna de data frame.
 l[["elemento"]]                   # Contenido de lista.
 ```
+
+
+## 58.1 PATRÓN MENTAL PARA RESOLVER PREGUNTAS DE MANIPULACIÓN
+
+```
+```
+
+```
+condicion <- variable operador valor
+                                   # 1. Construir TRUE/FALSE.
+
+variable[condicion]                # 2A. Obtener los VALORES que cumplen.
+id[condicion]                      # 2B. Obtener los SUJETOS que cumplen.
+sum(condicion, na.rm = TRUE)       # 2C. CONTAR cuántos cumplen.
+which(condicion)                   # 2D. Obtener sus POSICIONES.
+```
+
+Para intervalos:
+
+```
+```
+
+```
+variable >= limite_inferior &
+variable <= limite_superior        # Intervalo inclusivo.
+```
+
+Para una variable ya lógica:
+
+```
+```
+
+```
+hospitalizado                      # Casos TRUE.
+!hospitalizado                     # Casos FALSE convertidos a TRUE.
+sum(hospitalizado)                 # Cuántos TRUE si no hay NA.
+id[hospitalizado]                  # Quiénes son TRUE.
+```
+
+Para una condición que puede generar `NA`:
+
+```
+```
+
+```
+which(condicion)                   # Posiciones TRUE sin arrastrar NA.
+sum(condicion, na.rm = TRUE)       # Número de TRUE ignorando NA.
+```
+
+---
 
 Eso cubre el **código, operadores, constructores, selección, inspección, factores, listas y fórmulas que aparecen como contenido de los dos temas**. 
